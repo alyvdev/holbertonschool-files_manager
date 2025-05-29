@@ -1,6 +1,9 @@
+/* eslint-disable import/first */
 /* eslint-disable import/extensions */
 import sha1 from 'sha1';
-import { ObjectId } from 'mongodb';
+import pkg from 'mongodb';
+
+const { ObjectId } = pkg;
 import redisClient from '../utils/redis.mjs';
 import dbClient from '../utils/db.mjs';
 

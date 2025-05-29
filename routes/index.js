@@ -1,9 +1,10 @@
+/* eslint-disable import/extensions */
 // routes/index.js
 import express from 'express';
-import UsersController from '../controllers/UsersController';
-import AuthController from '../controllers/AuthController';
-import AppController from '../controllers/AppController';
-import FilesController from '../controllers/FilesController';
+import UsersController from '../controllers/UsersController.js';
+import AuthController from '../controllers/AuthController.js';
+import AppController from '../controllers/AppController.js';
+import FilesController from '../controllers/FilesController.js';
 
 const router = express.Router();
 
