@@ -1,39 +1,79 @@
-import { MongoClient } from 'mongodb';
+import pkg from 'mongodb';
 
-const DB_HOST = process.env.DB_HOST || 'localhost';
-const DB_PORT = process.env.DB_PORT || 27017;
-const DB_DATABASE = process.env.DB_DATABASE || 'files_manager';
-const url = `mongodb://${DB_HOST}:${DB_PORT}`;
+const { MongoClient } = pkg;
 
 class DBClient {
   constructor() {
-    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
-      if (!error) {
-        this.db = client.db(DB_DATABASE);
-        this.users = this.db.collection('users');
-        this.files = this.db.collection('files');
-      } else {
-        console.log(error.message);
-        this.db = false;
-      }
+    // Get connection parameters from environment variables or use defaults
+    const host = process.env.DB_HOST || 'localhost';
+    const port = process.env.DB_PORT || 27017;
+    const database = process.env.DB_DATABASE || 'files_manager';
+
+    // Create the MongoDB connection URL
+    const url = `mongodb://${host}:${port}`;
+
+    // Initialize connection state
+    this.client = null;
+    this.db = null;
+    this.connected = false;
+
+    // Connect to MongoDB (don't await in constructor)
+    this.connectToMongoDB(url, database).catch(() => {
+      // Silently handle connection errors in constructor
     });
   }
 
+  async connectToMongoDB(url, database) {
+    try {
+      // Create a new MongoClient
+      this.client = new MongoClient(url, { useUnifiedTopology: true });
+
+      // Connect to the MongoDB server
+      await this.client.connect();
+
+      // Get the database
+      this.db = this.client.db(database);
+
+      // Set connection state to true
+      this.connected = true;
+    } catch (error) {
+      console.log('MongoDB connection error:', error.message);
+      this.connected = false;
+    }
+  }
+
   isAlive() {
-    return !!this.db;
+    return this.connected;
   }
 
   async nbUsers() {
-    const userCount = this.users.countDocuments();
-    return userCount;
+    if (!this.isAlive()) {
+      return 0;
+    }
+    try {
+      const count = await this.db.collection('users').countDocuments();
+      return count;
+    } catch (error) {
+      console.log('Error counting users:', error.message);
+      return 0;
+    }
   }
 
   async nbFiles() {
-    const fileCount = this.files.countDocuments();
-    return fileCount;
+    if (!this.isAlive()) {
+      return 0;
+    }
+    try {
+      const count = await this.db.collection('files').countDocuments();
+      return count;
+    } catch (error) {
+      console.log('Error counting files:', error.message);
+      return 0;
+    }
   }
 }
 
+// Create and export an instance of DBClient
 const dbClient = new DBClient();
 
 export default dbClient;

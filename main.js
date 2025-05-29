@@ -3,11 +3,11 @@ import dbClient from './utils/db.mjs';
 
 const waitConnection = () => new Promise((resolve, reject) => {
   let i = 0;
-  const repeatFct = async () => {
-    await setTimeout(() => {
+  const repeatFct = () => {
+    setTimeout(() => {
       i += 1;
       if (i >= 10) {
-        reject();
+        reject(new Error('Connection timeout'));
       } else if (!dbClient.isAlive()) {
         repeatFct();
       } else {
