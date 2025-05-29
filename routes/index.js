@@ -3,6 +3,7 @@ import express from 'express';
 import AppController from '../controllers/AppController.js';
 import UsersController from '../controllers/UsersController.js';
 import AuthController from '../controllers/AuthController.js';
+import FilesController from '../controllers/FilesController.js';
 
 const router = express.Router();
 
@@ -23,5 +24,8 @@ router.get('/disconnect', AuthController.getDisconnect);
 
 // GET /users/me => UsersController.getMe
 router.get('/users/me', UsersController.getMe);
+
+// POST /files => FilesController.postUpload
+router.post('/files', FilesController.postUpload);
 
 export default router;
