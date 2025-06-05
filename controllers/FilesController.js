@@ -135,11 +135,22 @@ class FilesController {
 
   static async getIndex(req, res) {
     const key = req.header('X-Token');
-    const session = await redisClient.get(`auth_${key}`);
     if (!key || key.length === 0) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    if (session) {
+
+    let session;
+    try {
+      session = await redisClient.get(`auth_${key}`);
+    } catch (error) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!session) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
       let { parentId } = req.query;
       let { page } = req.query;
       if (!parentId) {
@@ -183,9 +194,11 @@ class FilesController {
         isPublic: file.isPublic,
         parentId: file.parentId,
       }));
+
       return res.status(200).json(files);
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal server error' });
     }
-    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   static async putPublish(req, res) {
