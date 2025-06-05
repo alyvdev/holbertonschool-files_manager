@@ -140,9 +140,8 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     if (session) {
-      let { parentId, page } = req.query;
-
-      // Set default values
+      let { parentId } = req.query;
+      let { page } = req.query;
       if (!parentId) {
         parentId = '0';
       }
@@ -151,43 +150,39 @@ class FilesController {
       } else {
         page = parseInt(page, 10);
       }
-
-      // Build match criteria
-      const matchCriteria = {
-        userId: ObjectId(session),
-      };
-
+      let search = [];
       if (parentId === '0') {
-        matchCriteria.parentId = 0;
+        search = await dbClient.db
+          .collection('files')
+          .find({ userId: ObjectId(session), parentId: 0 })
+          .skip(page * 20)
+          .limit(20)
+          .toArray();
       } else {
         try {
-          matchCriteria.parentId = ObjectId(parentId);
+          search = await dbClient.db
+            .collection('files')
+            .find({ userId: ObjectId(session), parentId: ObjectId(parentId) })
+            .skip(page * 20)
+            .limit(20)
+            .toArray();
         } catch (e) {
-          matchCriteria.parentId = parentId;
+          search = await dbClient.db
+            .collection('files')
+            .find({ userId: ObjectId(session), parentId })
+            .skip(page * 20)
+            .limit(20)
+            .toArray();
         }
       }
-
-      // Use MongoDB aggregation for pagination
-      const files = await dbClient.db
-        .collection('files')
-        .aggregate([
-          { $match: matchCriteria },
-          { $skip: page * 20 },
-          { $limit: 20 },
-          {
-            $project: {
-              id: '$_id',
-              userId: 1,
-              name: 1,
-              type: 1,
-              isPublic: 1,
-              parentId: 1,
-              _id: 0,
-            },
-          },
-        ])
-        .toArray();
-
+      const files = search.map((file) => ({
+        id: file._id,
+        userId: file.userId,
+        name: file.name,
+        type: file.type,
+        isPublic: file.isPublic,
+        parentId: file.parentId,
+      }));
       return res.status(200).json(files);
     }
     return res.status(401).json({ error: 'Unauthorized' });
