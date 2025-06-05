@@ -1,11 +1,11 @@
-import { promisify } from 'util';
+const { promisify } = require("util");
 
-const redis = require('redis');
+const redis = require("redis");
 
 class RedisClient {
   constructor() {
     this.client = redis.createClient();
-    this.client.on('error', (error) => console.log(error.message));
+    this.client.on("error", (error) => console.log(error.message));
   }
 
   isAlive() {

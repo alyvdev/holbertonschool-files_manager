@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+const { v4: uuidv4 } = require('uuid');
 
 const crypto = require('crypto');
 const redisClient = require('../utils/redis');
@@ -29,11 +29,15 @@ class AuthController {
     const email = credentials[0].toString('utf-8');
     const psswd = credentials[1].toString('utf-8');
     const hashpwd = hashPasswd(psswd);
-    const search = await dbClient.db.collection('users').find({ email, password: hashpwd }).toArray();
+    const search = await dbClient.db
+      .collection('users')
+      .find({ email, password: hashpwd })
+      .toArray();
 
     if (search.length < 1) {
       return res.status(401).json({ error: 'Unauthorized' });
-    } if (hashpwd !== search[0].password) {
+    }
+    if (hashpwd !== search[0].password) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const key = uuidv4();
